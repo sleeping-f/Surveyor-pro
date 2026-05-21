@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_spacing.dart';
+import '../../../core/location/domain/location_service.dart';
+import '../../../core/location/infrastructure/geolocator_location_service.dart';
+import '../application/gps_capture_controller.dart';
 import '../domain/survey_form_options.dart';
+import 'widgets/gps_capture_card.dart';
 import 'widgets/new_survey_action_bar.dart';
 import 'widgets/survey_choice_group.dart';
 import 'widgets/survey_dropdown_field.dart';
@@ -9,7 +13,12 @@ import 'widgets/survey_form_section.dart';
 import 'widgets/survey_text_field.dart';
 
 class NewSurveyScreen extends StatefulWidget {
-  const NewSurveyScreen({super.key});
+  const NewSurveyScreen({
+    this.locationService = const GeolocatorLocationService(),
+    super.key,
+  });
+
+  final LocationService locationService;
 
   @override
   State<NewSurveyScreen> createState() => _NewSurveyScreenState();
@@ -21,10 +30,19 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
   final _roadNameController = TextEditingController();
   final _chainageController = TextEditingController();
   final _notesController = TextEditingController();
+  late final GpsCaptureController _gpsCaptureController;
 
   RoadSide? _roadSide;
   String? _distressType;
   SurveySeverity? _severity;
+
+  @override
+  void initState() {
+    super.initState();
+    _gpsCaptureController = GpsCaptureController(
+      locationService: widget.locationService,
+    );
+  }
 
   @override
   void dispose() {
@@ -32,6 +50,7 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
     _roadNameController.dispose();
     _chainageController.dispose();
     _notesController.dispose();
+    _gpsCaptureController.dispose();
     super.dispose();
   }
 
@@ -72,11 +91,19 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
-                                child: _RoadDetailsSection(
-                                  projectNameController:
-                                      _projectNameController,
-                                  roadNameController: _roadNameController,
-                                  chainageController: _chainageController,
+                                child: Column(
+                                  children: [
+                                    _RoadDetailsSection(
+                                      projectNameController:
+                                          _projectNameController,
+                                      roadNameController: _roadNameController,
+                                      chainageController: _chainageController,
+                                    ),
+                                    const SizedBox(height: AppSpacing.md),
+                                    GpsCaptureCard(
+                                      controller: _gpsCaptureController,
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.md),
@@ -106,6 +133,10 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
                                     _projectNameController,
                                 roadNameController: _roadNameController,
                                 chainageController: _chainageController,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              GpsCaptureCard(
+                                controller: _gpsCaptureController,
                               ),
                               const SizedBox(height: AppSpacing.md),
                               _ConditionSection(
@@ -153,6 +184,7 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
     _roadNameController.clear();
     _chainageController.clear();
     _notesController.clear();
+    _gpsCaptureController.reset();
     setState(() {
       _roadSide = null;
       _distressType = null;

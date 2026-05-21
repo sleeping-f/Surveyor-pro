@@ -157,7 +157,7 @@ class _ReadinessGrid extends StatelessWidget {
       ),
     ];
 
-    return Wrap(
+    return const Wrap(
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
       children: items,

@@ -20,13 +20,10 @@ class SurveyChoiceGroup<T> extends FormField<T> {
     required String label,
     required List<SurveyChoiceOption<T>> options,
     required ValueChanged<T?> onChanged,
-    T? initialValue,
-    FormFieldValidator<T>? validator,
-    Key? key,
+    super.initialValue,
+    super.validator,
+    super.key,
   }) : super(
-          key: key,
-          initialValue: initialValue,
-          validator: validator,
           builder: (field) {
             final context = field.context;
             final colorScheme = Theme.of(context).colorScheme;

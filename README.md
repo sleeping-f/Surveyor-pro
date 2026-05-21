@@ -17,6 +17,13 @@ lib/
     core/
       constants/
         app_spacing.dart
+      location/
+        domain/
+          captured_location.dart
+          location_failure.dart
+          location_service.dart
+        infrastructure/
+          geolocator_location_service.dart
       theme/
         app_colors.dart
         app_text_styles.dart
@@ -31,11 +38,14 @@ lib/
             quick_action_card.dart
             survey_overview_card.dart
       surveys/
+        application/
+          gps_capture_controller.dart
         domain/
           survey_form_options.dart
         presentation/
           new_survey_screen.dart
           widgets/
+            gps_capture_card.dart
             new_survey_action_bar.dart
             survey_choice_group.dart
             survey_dropdown_field.dart
@@ -56,6 +66,8 @@ lib/
 - `lib/src/app/presentation/app_shell.dart` provides adaptive navigation: bottom navigation on phones and a navigation rail on wider Android layouts.
 - `lib/src/app/presentation/app_destination.dart` keeps navigation labels and icons in one small model.
 - `lib/src/core/constants/app_spacing.dart` centralizes spacing, touch target, radius, and max-width values.
+- `lib/src/core/location/domain/*` defines plugin-free GPS models, failures, and the reusable location service contract.
+- `lib/src/core/location/infrastructure/geolocator_location_service.dart` implements location capture with `geolocator`.
 - `lib/src/core/theme/app_colors.dart` defines reusable brand/status colors and a `ThemeExtension` for semantic field states.
 - `lib/src/core/theme/app_text_styles.dart` defines the app typography scale and reusable text helpers.
 - `lib/src/core/theme/app_theme.dart` builds Material 3 light and dark themes.
@@ -65,18 +77,39 @@ lib/
 - `lib/src/features/home/presentation/home_screen.dart` composes the Home Screen and responsive layout.
 - `lib/src/features/home/presentation/widgets/*` contains focused Home Screen widgets.
 - `lib/src/features/surveys/domain/survey_form_options.dart` defines form options for road side, severity, and distress types.
+- `lib/src/features/surveys/application/gps_capture_controller.dart` owns GPS capture state for the survey form.
 - `lib/src/features/surveys/presentation/new_survey_screen.dart` contains the validated, keyboard-safe New Survey form.
-- `lib/src/features/surveys/presentation/widgets/*` contains reusable form fields, choice controls, sections, and the sticky action bar.
+- `lib/src/features/surveys/presentation/widgets/*` contains reusable form fields, choice controls, GPS capture UI, sections, and the sticky action bar.
 
 ## Dependencies
 
-No runtime packages are added yet. The app currently uses only Flutter Material APIs.
+Runtime dependency:
+
+```yaml
+geolocator: ^14.0.2
+```
 
 Development dependency:
 
 ```yaml
 flutter_lints: ^5.0.0
 ```
+
+## Android location setup
+
+The Android app is configured for foreground GPS capture only.
+
+- `android/app/src/main/AndroidManifest.xml` includes:
+
+```xml
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+```
+
+- `android/app/build.gradle.kts` uses `compileSdk = 36`, matching the current Android plugin requirements.
+- Android 10/11 compatibility is preserved through `minSdk`; `compileSdk` does not raise the minimum supported Android version.
+- `android/gradle.properties` disables Kotlin incremental compilation and uses in-process Kotlin compilation to avoid Windows Kotlin cache registration failures during plugin builds.
+- Background location and map rendering are intentionally not enabled yet.
 
 ## Run locally
 
