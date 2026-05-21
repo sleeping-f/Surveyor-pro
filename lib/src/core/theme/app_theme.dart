@@ -73,6 +73,46 @@ abstract final class AppTheme {
           ),
         ),
       ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: colorScheme.surfaceContainerLow,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: AppSpacing.radius,
+          borderSide: BorderSide(
+            color: colorScheme.outlineVariant,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AppSpacing.radius,
+          borderSide: BorderSide(
+            color: colorScheme.outlineVariant,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppSpacing.radius,
+          borderSide: BorderSide(
+            color: colorScheme.primary,
+            width: 1.6,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: AppSpacing.radius,
+          borderSide: BorderSide(
+            color: colorScheme.error,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: AppSpacing.radius,
+          borderSide: BorderSide(
+            color: colorScheme.error,
+            width: 1.6,
+          ),
+        ),
+      ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
         indicatorShape: RoundedRectangleBorder(

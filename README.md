@@ -9,6 +9,7 @@ lib/
   main.dart
   src/
     app/
+      app_routes.dart
       surveyor_pro_app.dart
       presentation/
         app_destination.dart
@@ -29,6 +30,17 @@ lib/
             home_header.dart
             quick_action_card.dart
             survey_overview_card.dart
+      surveys/
+        domain/
+          survey_form_options.dart
+        presentation/
+          new_survey_screen.dart
+          widgets/
+            new_survey_action_bar.dart
+            survey_choice_group.dart
+            survey_dropdown_field.dart
+            survey_form_section.dart
+            survey_text_field.dart
     shared/
       widgets/
         app_card.dart
@@ -39,6 +51,7 @@ lib/
 ## Files
 
 - `lib/main.dart` starts the Flutter app.
+- `lib/src/app/app_routes.dart` defines named routes used by feature entry points.
 - `lib/src/app/surveyor_pro_app.dart` owns `MaterialApp`, light/dark themes, and the root shell.
 - `lib/src/app/presentation/app_shell.dart` provides adaptive navigation: bottom navigation on phones and a navigation rail on wider Android layouts.
 - `lib/src/app/presentation/app_destination.dart` keeps navigation labels and icons in one small model.
@@ -51,6 +64,9 @@ lib/
 - `lib/src/shared/widgets/placeholder_feature_page.dart` gives future navigation tabs a clean temporary screen.
 - `lib/src/features/home/presentation/home_screen.dart` composes the Home Screen and responsive layout.
 - `lib/src/features/home/presentation/widgets/*` contains focused Home Screen widgets.
+- `lib/src/features/surveys/domain/survey_form_options.dart` defines form options for road side, severity, and distress types.
+- `lib/src/features/surveys/presentation/new_survey_screen.dart` contains the validated, keyboard-safe New Survey form.
+- `lib/src/features/surveys/presentation/widgets/*` contains reusable form fields, choice controls, sections, and the sticky action bar.
 
 ## Dependencies
 
@@ -62,14 +78,19 @@ Development dependency:
 flutter_lints: ^5.0.0
 ```
 
-## Next setup step
+## Run locally
 
-This workspace currently contains the Dart/Flutter source foundation. After installing Flutter, generate the Android platform files from the project root:
+From the project root:
+
+```bash
+flutter pub get
+flutter run
+```
+
+If platform files are ever missing, regenerate them with:
 
 ```bash
 flutter create --platforms=android --org com.example .
-flutter pub get
-flutter run
 ```
 
 Replace `com.example` with your real organization package before production work begins.

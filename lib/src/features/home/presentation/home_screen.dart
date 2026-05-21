@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/app_routes.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -38,8 +39,7 @@ class HomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     HomeHeader(
-                      onNewSurveyPressed: () =>
-                          _showPendingFeature(context, 'New survey'),
+                      onNewSurveyPressed: () => _openNewSurvey(context),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     if (isWide)
@@ -80,8 +80,14 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
                     _QuickActionsGrid(
                       isWide: isWide,
-                      onActionSelected: (feature) =>
-                          _showPendingFeature(context, feature),
+                      onActionSelected: (feature) {
+                        if (feature == 'Start survey') {
+                          _openNewSurvey(context);
+                          return;
+                        }
+
+                        _showPendingFeature(context, feature);
+                      },
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     const SectionHeader(
@@ -106,6 +112,10 @@ class HomeScreen extends StatelessWidget {
         content: Text('$feature will be connected in a later feature slice.'),
       ),
     );
+  }
+
+  void _openNewSurvey(BuildContext context) {
+    Navigator.of(context).pushNamed(AppRoutes.newSurvey);
   }
 }
 

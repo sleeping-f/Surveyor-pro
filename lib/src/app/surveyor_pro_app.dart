@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_routes.dart';
 import '../core/theme/app_theme.dart';
 import 'presentation/app_shell.dart';
 
@@ -14,6 +15,7 @@ class SurveyorProApp extends StatelessWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.system,
+      routes: AppRoutes.routes,
       home: const AppShell(),
     );
   }
