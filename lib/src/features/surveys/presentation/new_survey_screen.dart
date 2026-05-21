@@ -3,22 +3,35 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/location/domain/location_service.dart';
 import '../../../core/location/infrastructure/geolocator_location_service.dart';
+import '../../../core/media/domain/image_capture_service.dart';
+import '../../../core/media/infrastructure/image_picker_capture_service.dart';
 import '../application/gps_capture_controller.dart';
+import '../application/survey_image_controller.dart';
+import '../data/shared_preferences_survey_image_repository.dart';
 import '../domain/survey_form_options.dart';
+import '../domain/survey_image_repository.dart';
 import 'widgets/gps_capture_card.dart';
 import 'widgets/new_survey_action_bar.dart';
 import 'widgets/survey_choice_group.dart';
 import 'widgets/survey_dropdown_field.dart';
 import 'widgets/survey_form_section.dart';
+import 'widgets/survey_images_card.dart';
 import 'widgets/survey_text_field.dart';
 
 class NewSurveyScreen extends StatefulWidget {
-  const NewSurveyScreen({
+  NewSurveyScreen({
     this.locationService = const GeolocatorLocationService(),
+    ImageCaptureService? imageCaptureService,
+    SurveyImageRepository? imageRepository,
     super.key,
-  });
+  })  : imageCaptureService =
+            imageCaptureService ?? ImagePickerCaptureService(),
+        imageRepository =
+            imageRepository ?? SharedPreferencesSurveyImageRepository();
 
   final LocationService locationService;
+  final ImageCaptureService imageCaptureService;
+  final SurveyImageRepository imageRepository;
 
   @override
   State<NewSurveyScreen> createState() => _NewSurveyScreenState();
@@ -31,6 +44,7 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
   final _chainageController = TextEditingController();
   final _notesController = TextEditingController();
   late final GpsCaptureController _gpsCaptureController;
+  late final SurveyImageController _surveyImageController;
 
   RoadSide? _roadSide;
   String? _distressType;
@@ -42,6 +56,10 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
     _gpsCaptureController = GpsCaptureController(
       locationService: widget.locationService,
     );
+    _surveyImageController = SurveyImageController(
+      imageCaptureService: widget.imageCaptureService,
+      imageRepository: widget.imageRepository,
+    )..load();
   }
 
   @override
@@ -51,6 +69,7 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
     _chainageController.dispose();
     _notesController.dispose();
     _gpsCaptureController.dispose();
+    _surveyImageController.dispose();
     super.dispose();
   }
 
@@ -103,6 +122,10 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
                                     GpsCaptureCard(
                                       controller: _gpsCaptureController,
                                     ),
+                                    const SizedBox(height: AppSpacing.md),
+                                    SurveyImagesCard(
+                                      controller: _surveyImageController,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -137,6 +160,10 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
                               const SizedBox(height: AppSpacing.md),
                               GpsCaptureCard(
                                 controller: _gpsCaptureController,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              SurveyImagesCard(
+                                controller: _surveyImageController,
                               ),
                               const SizedBox(height: AppSpacing.md),
                               _ConditionSection(
@@ -185,6 +212,7 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
     _chainageController.clear();
     _notesController.clear();
     _gpsCaptureController.reset();
+    _surveyImageController.clear();
     setState(() {
       _roadSide = null;
       _distressType = null;
@@ -206,9 +234,9 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Survey is valid. Local saving will be connected later.',
+          'Survey is valid with ${_surveyImageController.state.draft.imagePaths.length} image path(s). Local saving will be connected later.',
         ),
       ),
     );

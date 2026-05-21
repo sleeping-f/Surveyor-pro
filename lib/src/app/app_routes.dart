@@ -7,7 +7,7 @@ abstract final class AppRoutes {
 
   static Map<String, WidgetBuilder> get routes {
     return {
-      newSurvey: (_) => const NewSurveyScreen(),
+      newSurvey: (_) => NewSurveyScreen(),
     };
   }
 }

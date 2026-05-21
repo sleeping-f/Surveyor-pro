@@ -24,6 +24,13 @@ lib/
           location_service.dart
         infrastructure/
           geolocator_location_service.dart
+      media/
+        domain/
+          image_capture_failure.dart
+          image_capture_service.dart
+          local_image.dart
+        infrastructure/
+          image_picker_capture_service.dart
       theme/
         app_colors.dart
         app_text_styles.dart
@@ -40,8 +47,14 @@ lib/
       surveys/
         application/
           gps_capture_controller.dart
+          survey_image_controller.dart
+        data/
+          shared_preferences_survey_image_repository.dart
         domain/
+          survey_draft.dart
           survey_form_options.dart
+          survey_image.dart
+          survey_image_repository.dart
         presentation/
           new_survey_screen.dart
           widgets/
@@ -50,6 +63,7 @@ lib/
             survey_choice_group.dart
             survey_dropdown_field.dart
             survey_form_section.dart
+            survey_images_card.dart
             survey_text_field.dart
     shared/
       widgets/
@@ -68,6 +82,8 @@ lib/
 - `lib/src/core/constants/app_spacing.dart` centralizes spacing, touch target, radius, and max-width values.
 - `lib/src/core/location/domain/*` defines plugin-free GPS models, failures, and the reusable location service contract.
 - `lib/src/core/location/infrastructure/geolocator_location_service.dart` implements location capture with `geolocator`.
+- `lib/src/core/media/domain/*` defines plugin-free image capture models, failures, and the reusable image capture contract.
+- `lib/src/core/media/infrastructure/image_picker_capture_service.dart` captures camera images and persists them from cache into app documents.
 - `lib/src/core/theme/app_colors.dart` defines reusable brand/status colors and a `ThemeExtension` for semantic field states.
 - `lib/src/core/theme/app_text_styles.dart` defines the app typography scale and reusable text helpers.
 - `lib/src/core/theme/app_theme.dart` builds Material 3 light and dark themes.
@@ -77,7 +93,11 @@ lib/
 - `lib/src/features/home/presentation/home_screen.dart` composes the Home Screen and responsive layout.
 - `lib/src/features/home/presentation/widgets/*` contains focused Home Screen widgets.
 - `lib/src/features/surveys/domain/survey_form_options.dart` defines form options for road side, severity, and distress types.
+- `lib/src/features/surveys/domain/survey_draft.dart` is the current local survey draft model and stores captured image paths.
+- `lib/src/features/surveys/domain/survey_image_repository.dart` defines draft image persistence.
+- `lib/src/features/surveys/data/shared_preferences_survey_image_repository.dart` persists draft image metadata across app restarts until SQLite is added.
 - `lib/src/features/surveys/application/gps_capture_controller.dart` owns GPS capture state for the survey form.
+- `lib/src/features/surveys/application/survey_image_controller.dart` owns image capture, retake, delete, recovery, and draft image persistence state.
 - `lib/src/features/surveys/presentation/new_survey_screen.dart` contains the validated, keyboard-safe New Survey form.
 - `lib/src/features/surveys/presentation/widgets/*` contains reusable form fields, choice controls, GPS capture UI, sections, and the sticky action bar.
 
@@ -87,6 +107,9 @@ Runtime dependency:
 
 ```yaml
 geolocator: ^14.0.2
+image_picker: ^1.2.2
+path_provider: ^2.1.5
+shared_preferences: ^2.5.5
 ```
 
 Development dependency:
@@ -97,19 +120,26 @@ flutter_lints: ^5.0.0
 
 ## Android location setup
 
-The Android app is configured for foreground GPS capture only.
+The Android app is configured for foreground GPS and camera capture only.
 
 - `android/app/src/main/AndroidManifest.xml` includes:
 
 ```xml
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.CAMERA" />
+
+<uses-feature
+    android:name="android.hardware.camera"
+    android:required="false" />
 ```
 
 - `android/app/build.gradle.kts` uses `compileSdk = 36`, matching the current Android plugin requirements.
-- Android 10/11 compatibility is preserved through `minSdk`; `compileSdk` does not raise the minimum supported Android version.
+- `android/app/build.gradle.kts` uses `minSdk = 24`, which supports Android 7+ and safely includes Android 10/11 field devices.
+- Android 10/11 compatibility is preserved; `compileSdk` does not raise the minimum supported Android version.
 - `android/gradle.properties` disables Kotlin incremental compilation and uses in-process Kotlin compilation to avoid Windows Kotlin cache registration failures during plugin builds.
-- Background location and map rendering are intentionally not enabled yet.
+- No external storage permission is used. Captured images are copied into the app documents directory.
+- Background location, maps, cloud upload, database storage, and image compression are intentionally not enabled yet.
 
 ## Run locally
 
