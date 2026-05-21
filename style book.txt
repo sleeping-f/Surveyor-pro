@@ -1,0 +1,36 @@
+Act as a senior Flutter engineer and senior mobile UI/UX designer.
+
+Build production-quality code, not tutorial code.
+
+Requirements:
+- clean architecture mindset
+- scalable folder structure
+- reusable widgets
+- null-safe Dart
+- latest stable Flutter APIs
+- smooth animations
+- highly polished UI
+- minimalistic professional utility-app aesthetic
+- optimized for field usage
+- touch-friendly layout
+- avoid unnecessary packages
+- maintainable code
+- proper naming conventions
+- responsive for Android devices
+- offline-first mindset
+- dark/light mode compatible
+
+UI Style:
+- modern minimal utility app
+- elegant spacing
+- soft elevation
+- subtle rounded corners
+- professional typography
+- not flashy
+- focus on usability and speed
+
+Output:
+- explain file structure first
+- then provide code
+- explain where each file goes
+- explain dependencies to install
