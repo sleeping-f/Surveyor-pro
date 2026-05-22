@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
+import '../../exports/presentation/export_screen.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -78,17 +79,27 @@ class HomeScreen extends StatelessWidget {
                       subtitle: 'Prepared for offline field collection.',
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    _QuickActionsGrid(
-                      isWide: isWide,
-                      onActionSelected: (feature) {
-                        if (feature == 'Start survey') {
-                          _openNewSurvey(context);
-                          return;
-                        }
+                      _QuickActionsGrid(
+                        isWide: isWide,
+                        onActionSelected: (feature) {
+                          if (feature == 'Start survey') {
+                            _openNewSurvey(context);
+                            return;
+                          }
 
-                        _showPendingFeature(context, feature);
-                      },
-                    ),
+                          if (feature == 'Quick camera') {
+                            _openQuickCamera(context);
+                            return;
+                          }
+
+                          if (feature == 'Export CSV') {
+                            _openExports(context);
+                            return;
+                          }
+
+                          _showPendingFeature(context, feature);
+                        },
+                      ),
                     const SizedBox(height: AppSpacing.xl),
                     const SectionHeader(
                       title: 'Recent surveys',
@@ -117,6 +128,18 @@ class HomeScreen extends StatelessWidget {
   void _openNewSurvey(BuildContext context) {
     Navigator.of(context).pushNamed(AppRoutes.newSurvey);
   }
+
+  void _openQuickCamera(BuildContext context) {
+    Navigator.of(context).pushNamed(AppRoutes.quickCamera);
+  }
+
+  void _openExports(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ExportScreen(),
+      ),
+    );
+  }
 }
 
 class _QuickActionsGrid extends StatelessWidget {
@@ -143,25 +166,18 @@ class _QuickActionsGrid extends StatelessWidget {
         onTap: () => onActionSelected('Start survey'),
       ),
       QuickActionCard(
-        title: 'Capture GPS',
-        subtitle: 'Attach chainage and coordinates',
-        icon: Icons.gps_fixed,
-        color: statusColors.gps,
-        onTap: () => onActionSelected('GPS capture'),
-      ),
-      QuickActionCard(
-        title: 'Add photos',
-        subtitle: 'Store evidence on device',
+        title: 'Quick camera',
+        subtitle: 'Watermark GPS automatically',
         icon: Icons.photo_camera_outlined,
-        color: statusColors.camera,
-        onTap: () => onActionSelected('Camera capture'),
+        color: statusColors.gps,
+        onTap: () => onActionSelected('Quick camera'),
       ),
       QuickActionCard(
         title: 'Export CSV',
         subtitle: 'Prepare field data transfer',
         icon: Icons.file_download_outlined,
         color: statusColors.info,
-        onTap: () => onActionSelected('CSV export'),
+        onTap: () => onActionSelected('Export CSV'),
       ),
     ];
 

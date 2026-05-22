@@ -24,6 +24,14 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Allow Surveyor Pro to capture field photos.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location is used to watermark captured survey photos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Allow Surveyor Pro to save watermarked photos to your library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow Surveyor Pro to access saved survey photos.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
