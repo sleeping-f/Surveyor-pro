@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
@@ -151,7 +152,10 @@ class QuickCameraProcessingService {
     }
 
     final image = img.bakeOrientation(decoded);
-    final font = img.arial24;
+    final font = img.arial48;
+    final watermarkScale = _watermarkScaleForAspectRatio(
+      image.width / image.height,
+    );
     final textLines = <String>[
       'Lat: ${location.latitude.toStringAsFixed(6)}',
       'Lon: ${location.longitude.toStringAsFixed(6)}',
@@ -162,25 +166,35 @@ class QuickCameraProcessingService {
         'Chainage: $chainage',
     ];
 
-    final padding = 16;
-    final lineHeight = font.lineHeight + 4;
-    final textHeight = textLines.length * lineHeight + padding * 2;
-    final startY = image.height - textHeight;
-    final safeStartY = startY < 0 ? 0 : startY;
+    const padding = 16;
+    const lineSpacing = 8;
+    final lineHeight = font.lineHeight + lineSpacing;
+    final textHeight = textLines.length * lineHeight - lineSpacing;
+    final boxHeight = textHeight + padding * 2;
+    final textBoxWidth = textLines
+            .map((line) => _measureTextWidth(font, line))
+            .fold<int>(0, math.max) +
+        padding * 2;
+
+    final watermark = img.Image(
+      width: textBoxWidth,
+      height: boxHeight,
+      numChannels: 4,
+    )..clear(img.ColorRgba8(0, 0, 0, 0));
 
     img.fillRect(
-      image,
+      watermark,
       x1: 0,
-      y1: safeStartY,
-      x2: image.width,
-      y2: image.height,
+      y1: 0,
+      x2: textBoxWidth,
+      y2: boxHeight,
       color: img.ColorRgba8(0, 0, 0, 160),
     );
 
-    var currentY = safeStartY + padding;
+    var currentY = padding;
     for (final line in textLines) {
       img.drawString(
-        image,
+        watermark,
         line,
         font: font,
         x: padding,
@@ -190,8 +204,38 @@ class QuickCameraProcessingService {
       currentY += lineHeight;
     }
 
+    final scaledWatermark = watermarkScale == 1.0
+        ? watermark
+        : img.copyResize(
+            watermark,
+            width: (watermark.width * watermarkScale).round(),
+            height: (watermark.height * watermarkScale).round(),
+            interpolation: img.Interpolation.nearest,
+          );
+
+    img.compositeImage(
+      image,
+      scaledWatermark,
+      dstX: 0,
+      dstY: math.max(0, image.height - scaledWatermark.height),
+      blend: img.BlendMode.alpha,
+    );
+
     final encoded = img.encodeJpg(image, quality: 92);
     await File(destinationPath).writeAsBytes(encoded, flush: true);
+  }
+
+  double _watermarkScaleForAspectRatio(double aspectRatio) {
+    final normalizedRatio = (aspectRatio / (4 / 3)).clamp(0.85, 1.15);
+    return (2.0 * normalizedRatio * 1.15).toDouble();
+  }
+
+  int _measureTextWidth(img.BitmapFont font, String text) {
+    var width = 0;
+    for (final rune in text.runes) {
+      width += font.characterXAdvance(String.fromCharCode(rune));
+    }
+    return width;
   }
 
   Future<bool> _requestSavePermission() async {
