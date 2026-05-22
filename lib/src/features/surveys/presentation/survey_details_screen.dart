@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/app_formatters.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../domain/survey_record.dart';
 import '../domain/survey_repository.dart';
@@ -27,148 +28,196 @@ class SurveyDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Survey details'),
       ),
-      body: FutureBuilder<SurveyRecord?>(
-        future: repository.fetchSurveyById(surveyId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding =
+              AppSpacing.pagePaddingFor(constraints.maxWidth);
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: AppCard(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error_outline, size: 40),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        'Unable to load survey',
-                        style: Theme.of(context).textTheme.titleMedium,
+          return FutureBuilder<SurveyRecord?>(
+            future: repository.fetchSurveyById(surveyId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: AppCard(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.error_outline, size: 40),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'Unable to load survey',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            'Try returning to the history list and opening again.',
+                            style: AppTextStyles.muted(context),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'Try returning to the history list and opening again.',
-                        style: AppTextStyles.muted(context),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                    ),
                   ),
+                );
+              }
+
+              final record = snapshot.data;
+              if (record == null) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: AppCard(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.search_off, size: 40),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'Survey not found',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            'The selected record is no longer available locally.',
+                            style: AppTextStyles.muted(context),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return ListView(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  AppSpacing.sm,
+                  horizontalPadding,
+                  AppSpacing.xl,
                 ),
-              ),
-            );
-          }
-
-          final record = snapshot.data;
-          if (record == null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: AppCard(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.search_off, size: 40),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        'Survey not found',
-                        style: Theme.of(context).textTheme.titleMedium,
+                children: [
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: AppSpacing.maxContentWidth,
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'The selected record is no longer available locally.',
-                        style: AppTextStyles.muted(context),
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SurveyFormSection(
+                            title: 'Road details',
+                            icon: Icons.route,
+                            children: [
+                              _DetailRow(
+                                label: 'Project',
+                                value: record.projectName,
+                              ),
+                              _DetailRow(
+                                label: 'Road',
+                                value: record.roadName,
+                              ),
+                              _DetailRow(
+                                label: 'Chainage',
+                                value: record.chainage,
+                              ),
+                              _DetailRow(
+                                label: 'Recorded',
+                                value: AppFormatters.shortDateTime(
+                                  record.createdAt,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          SurveyFormSection(
+                            title: 'Condition assessment',
+                            icon: Icons.fact_check_outlined,
+                            children: [
+                              _DetailRow(
+                                label: 'Road side',
+                                value: record.roadSide.label,
+                              ),
+                              _DetailRow(
+                                label: 'Distress type',
+                                value: record.distressType,
+                              ),
+                              _DetailRow(
+                                label: 'Severity',
+                                value: record.severity.label,
+                              ),
+                              _DetailRow(
+                                label: 'Notes',
+                                value: record.notes.isEmpty
+                                    ? 'No notes'
+                                    : record.notes,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          SurveyFormSection(
+                            title: 'Location',
+                            icon: Icons.gps_fixed,
+                            children: [
+                              if (record.location == null)
+                                Text(
+                                  'GPS was not captured for this record.',
+                                  style: AppTextStyles.muted(context),
+                                )
+                              else ...[
+                                _DetailRow(
+                                  label: 'Latitude',
+                                  value: record.location!.latitude
+                                      .toStringAsFixed(7),
+                                ),
+                                _DetailRow(
+                                  label: 'Longitude',
+                                  value: record.location!.longitude
+                                      .toStringAsFixed(7),
+                                ),
+                                _DetailRow(
+                                  label: 'Accuracy',
+                                  value:
+                                      '${record.location!.accuracyMeters.toStringAsFixed(1)} m',
+                                ),
+                                _DetailRow(
+                                  label: 'Captured',
+                                  value: AppFormatters.shortDateTime(
+                                    record.location!.timestamp,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          SurveyFormSection(
+                            title: 'Photos',
+                            icon: Icons.photo_camera_outlined,
+                            children: [
+                              if (record.images.isEmpty)
+                                Text(
+                                  'No photos were attached.',
+                                  style: AppTextStyles.muted(context),
+                                )
+                              else
+                                _SurveyImageGallery(images: record.images),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }
-
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.sm,
-              AppSpacing.md,
-              AppSpacing.xl,
-            ),
-            children: [
-              SurveyFormSection(
-                title: 'Road details',
-                icon: Icons.route,
-                children: [
-                  _DetailRow(label: 'Project', value: record.projectName),
-                  _DetailRow(label: 'Road', value: record.roadName),
-                  _DetailRow(label: 'Chainage', value: record.chainage),
-                  _DetailRow(label: 'Recorded', value: _formatDate(record.createdAt)),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SurveyFormSection(
-                title: 'Condition assessment',
-                icon: Icons.fact_check_outlined,
-                children: [
-                  _DetailRow(label: 'Road side', value: record.roadSide.label),
-                  _DetailRow(label: 'Distress type', value: record.distressType),
-                  _DetailRow(label: 'Severity', value: record.severity.label),
-                  _DetailRow(
-                    label: 'Notes',
-                    value: record.notes.isEmpty ? 'No notes' : record.notes,
+                    ),
                   ),
                 ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SurveyFormSection(
-                title: 'Location',
-                icon: Icons.gps_fixed,
-                children: [
-                  if (record.location == null)
-                    Text(
-                      'GPS was not captured for this record.',
-                      style: AppTextStyles.muted(context),
-                    )
-                  else ...[
-                    _DetailRow(
-                      label: 'Latitude',
-                      value: record.location!.latitude.toStringAsFixed(7),
-                    ),
-                    _DetailRow(
-                      label: 'Longitude',
-                      value: record.location!.longitude.toStringAsFixed(7),
-                    ),
-                    _DetailRow(
-                      label: 'Accuracy',
-                      value:
-                          '${record.location!.accuracyMeters.toStringAsFixed(1)} m',
-                    ),
-                    _DetailRow(
-                      label: 'Captured',
-                      value: _formatDate(record.location!.timestamp),
-                    ),
-                  ],
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SurveyFormSection(
-                title: 'Photos',
-                icon: Icons.photo_camera_outlined,
-                children: [
-                  if (record.images.isEmpty)
-                    Text(
-                      'No photos were attached.',
-                      style: AppTextStyles.muted(context),
-                    )
-                  else
-                    _SurveyImageGallery(images: record.images),
-                ],
-              ),
-            ],
+              );
+            },
           );
         },
       ),
@@ -303,10 +352,3 @@ class _SurveyImageGallery extends StatelessWidget {
   }
 }
 
-String _formatDate(DateTime timestamp) {
-  final local = timestamp.toLocal();
-  return '${local.year}-${_two(local.month)}-${_two(local.day)} '
-      '${_two(local.hour)}:${_two(local.minute)}';
-}
-
-String _two(int value) => value.toString().padLeft(2, '0');

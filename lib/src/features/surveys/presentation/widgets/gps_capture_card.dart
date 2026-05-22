@@ -5,6 +5,7 @@ import '../../../../core/location/domain/captured_location.dart';
 import '../../../../core/location/domain/location_failure.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/app_formatters.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../application/gps_capture_controller.dart';
 
@@ -218,7 +219,7 @@ class _CapturedGpsState extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         _LocationValueRow(
           label: 'Captured',
-          value: _formatTimestamp(location.timestamp),
+          value: AppFormatters.shortDateTime(location.timestamp),
         ),
         const SizedBox(height: AppSpacing.md),
         SizedBox(
@@ -424,11 +425,3 @@ double _accuracyProgress(double accuracyMeters) {
   final normalized = 1 - (accuracyMeters.clamp(0, 40) / 40);
   return normalized.clamp(0.08, 1).toDouble();
 }
-
-String _formatTimestamp(DateTime timestamp) {
-  final local = timestamp.toLocal();
-  return '${local.year}-${_two(local.month)}-${_two(local.day)} '
-      '${_two(local.hour)}:${_two(local.minute)}';
-}
-
-String _two(int value) => value.toString().padLeft(2, '0');

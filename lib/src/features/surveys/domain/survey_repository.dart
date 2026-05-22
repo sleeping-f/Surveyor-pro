@@ -8,6 +8,8 @@ abstract interface class SurveyRepository {
 
   Future<void> deleteSurvey(int id);
 
+  Future<List<SurveyRecord>> fetchAllSurveys();
+
   Future<SurveyRecord?> fetchSurveyById(int id);
 
   Future<List<SurveySummary>> fetchSurveySummaries({String? query});

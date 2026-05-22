@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/app_formatters.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../application/survey_history_controller.dart';
@@ -17,11 +18,13 @@ import 'survey_details_screen.dart';
 class SurveyHistoryScreen extends StatefulWidget {
   SurveyHistoryScreen({
     SurveyRepository? surveyRepository,
+    this.refreshToken = 0,
     super.key,
   }) : surveyRepository = surveyRepository ??
             SqfliteSurveyRepository(database: AppDatabase.instance);
 
   final SurveyRepository surveyRepository;
+  final int refreshToken;
 
   @override
   State<SurveyHistoryScreen> createState() => _SurveyHistoryScreenState();
@@ -48,6 +51,14 @@ class _SurveyHistoryScreenState extends State<SurveyHistoryScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant SurveyHistoryScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshToken != widget.refreshToken) {
+      unawaited(_controller.load());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -71,6 +82,8 @@ class _SurveyHistoryScreenState extends State<SurveyHistoryScreen> {
               final state = _controller.state;
 
               return CustomScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 slivers: [
                   SliverToBoxAdapter(
                     child: Padding(
@@ -145,9 +158,11 @@ class _SurveyHistoryScreenState extends State<SurveyHistoryScreen> {
                           ),
                         ),
                       ),
-                    SurveyHistoryStatus.empty => const SliverFillRemaining(
+                    SurveyHistoryStatus.empty => SliverFillRemaining(
                         hasScrollBody: false,
-                        child: _EmptyHistoryState(),
+                        child: _EmptyHistoryState(
+                          hasQuery: state.searchTerm.trim().isNotEmpty,
+                        ),
                       ),
                     SurveyHistoryStatus.ready => SliverPadding(
                         padding: EdgeInsets.fromLTRB(
@@ -216,24 +231,29 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: 'Search by project, road, chainage',
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: controller.text.isEmpty
-            ? null
-            : IconButton(
-                tooltip: 'Clear',
-                onPressed: () {
-                  controller.clear();
-                  onChanged('');
-                },
-                icon: const Icon(Icons.close),
-              ),
-      ),
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        return TextField(
+          controller: controller,
+          onChanged: onChanged,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Search by project, road, chainage',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: value.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear',
+                    onPressed: () {
+                      controller.clear();
+                      onChanged('');
+                    },
+                    icon: const Icon(Icons.close),
+                  ),
+          ),
+        );
+      },
     );
   }
 }
@@ -266,18 +286,22 @@ class _SurveyHistoryCardState extends State<SurveyHistoryCard> {
           Row(
             children: [
               Expanded(
-                child: InkWell(
-                  onTap: widget.onOpenDetails,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Row(
-                      children: [
-                        _SurveyThumbnail(path: summary.thumbnailPath),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: _SurveyHeaderContent(summary: summary),
-                        ),
-                      ],
+                child: Semantics(
+                  button: true,
+                  label: 'Open ${summary.projectName} survey details',
+                  child: InkWell(
+                    onTap: widget.onOpenDetails,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Row(
+                        children: [
+                          _SurveyThumbnail(path: summary.thumbnailPath),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: _SurveyHeaderContent(summary: summary),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -350,7 +374,7 @@ class _SurveyHeaderContent extends StatelessWidget {
           children: [
             _Chip(label: 'Chainage ${summary.chainage}'),
             _Chip(label: summary.severity.label),
-            _Chip(label: _formatDate(summary.createdAt)),
+            _Chip(label: AppFormatters.shortDateTime(summary.createdAt)),
           ],
         ),
       ],
@@ -499,7 +523,11 @@ class _DetailRow extends StatelessWidget {
 }
 
 class _EmptyHistoryState extends StatelessWidget {
-  const _EmptyHistoryState();
+  const _EmptyHistoryState({
+    required this.hasQuery,
+  });
+
+  final bool hasQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -514,12 +542,14 @@ class _EmptyHistoryState extends StatelessWidget {
               const Icon(Icons.folder_open_outlined, size: 40),
               const SizedBox(height: AppSpacing.md),
               Text(
-                'No surveys saved yet',
+                hasQuery ? 'No matching surveys' : 'No surveys saved yet',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Start a new survey to store offline records here.',
+                hasQuery
+                    ? 'Try a different project name or chainage.'
+                    : 'Start a new survey to store offline records here.',
                 style: AppTextStyles.muted(context),
                 textAlign: TextAlign.center,
               ),
@@ -530,11 +560,3 @@ class _EmptyHistoryState extends StatelessWidget {
     );
   }
 }
-
-String _formatDate(DateTime timestamp) {
-  final local = timestamp.toLocal();
-  return '${local.year}-${_two(local.month)}-${_two(local.day)} '
-      '${_two(local.hour)}:${_two(local.minute)}';
-}
-
-String _two(int value) => value.toString().padLeft(2, '0');

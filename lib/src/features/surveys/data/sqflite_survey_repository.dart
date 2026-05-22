@@ -74,6 +74,50 @@ class SqfliteSurveyRepository implements SurveyRepository {
   }
 
   @override
+  Future<List<SurveyRecord>> fetchAllSurveys() async {
+    final db = await _database.database;
+    try {
+      final surveyRows = await db.query(
+        'surveys',
+        orderBy: 'created_at DESC',
+      );
+      if (surveyRows.isEmpty) {
+        return const [];
+      }
+
+      final ids = surveyRows.map((row) => row['id'] as int).toList();
+      final imagesBySurvey = <int, List<SurveyImage>>{};
+      if (ids.isNotEmpty) {
+        final placeholders = List.filled(ids.length, '?').join(',');
+        final imageRows = await db.query(
+          'survey_images',
+          where: 'survey_id IN ($placeholders)',
+          whereArgs: ids,
+          orderBy: 'captured_at ASC',
+        );
+
+        for (final row in imageRows) {
+          final surveyId = row['survey_id'] as int;
+          imagesBySurvey.putIfAbsent(surveyId, () => []).add(
+                _imageFromRow(row),
+              );
+        }
+      }
+
+      return surveyRows
+          .map(
+            (row) => _surveyRecordFromRow(
+              row,
+              imagesBySurvey[row['id'] as int] ?? const [],
+            ),
+          )
+          .toList(growable: false);
+    } on DatabaseException catch (error) {
+      throw SurveyStorageException(_databaseFailure(error));
+    }
+  }
+
+  @override
   Future<SurveyRecord?> fetchSurveyById(int id) async {
     final db = await _database.database;
     try {
@@ -95,18 +139,9 @@ class SqfliteSurveyRepository implements SurveyRepository {
         orderBy: 'captured_at ASC',
       );
 
-      return SurveyRecord(
-        id: id,
-        projectName: surveyRow['project_name'] as String,
-        roadName: surveyRow['road_name'] as String,
-        chainage: surveyRow['chainage'] as String,
-        roadSide: _roadSideFromStorage(surveyRow['road_side'] as String),
-        distressType: surveyRow['distress_type'] as String,
-        severity: _severityFromStorage(surveyRow['severity'] as String),
-        notes: surveyRow['notes'] as String,
-        createdAt: DateTime.parse(surveyRow['created_at'] as String),
-        location: _locationFromRow(surveyRow),
-        images: imageRows.map(_imageFromRow).toList(growable: false),
+      return _surveyRecordFromRow(
+        surveyRow,
+        imageRows.map(_imageFromRow).toList(growable: false),
       );
     } on DatabaseException catch (error) {
       throw SurveyStorageException(_databaseFailure(error));
@@ -215,6 +250,25 @@ class SqfliteSurveyRepository implements SurveyRepository {
       id: row['image_id'] as String,
       path: row['path'] as String,
       capturedAt: DateTime.parse(row['captured_at'] as String),
+    );
+  }
+
+  SurveyRecord _surveyRecordFromRow(
+    Map<String, Object?> row,
+    List<SurveyImage> images,
+  ) {
+    return SurveyRecord(
+      id: row['id'] as int,
+      projectName: row['project_name'] as String,
+      roadName: row['road_name'] as String,
+      chainage: row['chainage'] as String,
+      roadSide: _roadSideFromStorage(row['road_side'] as String),
+      distressType: row['distress_type'] as String,
+      severity: _severityFromStorage(row['severity'] as String),
+      notes: row['notes'] as String,
+      createdAt: DateTime.parse(row['created_at'] as String),
+      location: _locationFromRow(row),
+      images: images,
     );
   }
 

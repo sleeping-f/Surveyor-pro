@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/exports/presentation/export_screen.dart';
 import '../../features/surveys/presentation/survey_history_screen.dart';
 import '../../shared/widgets/placeholder_feature_page.dart';
 import 'app_destination.dart';
@@ -17,6 +18,7 @@ class _AppShellState extends State<AppShell> {
   static const double _extendedRailBreakpoint = 1040;
 
   int _selectedIndex = 0;
+  int _surveyRefreshTick = 0;
 
   static const List<AppDestination> _destinations = [
     AppDestination(
@@ -41,20 +43,16 @@ class _AppShellState extends State<AppShell> {
     ),
   ];
 
-  static final List<Widget> _pages = [
-    const HomeScreen(),
-    SurveyHistoryScreen(),
-    const PlaceholderFeaturePage(
-      title: 'Map',
-      subtitle: 'GPS capture and road segment context will be added here.',
-      icon: Icons.map_outlined,
-    ),
-    const PlaceholderFeaturePage(
-      title: 'Exports',
-      subtitle: 'CSV export history and transfer tools will be added here.',
-      icon: Icons.download_outlined,
-    ),
-  ];
+  List<Widget> get _pages => [
+        const HomeScreen(),
+        SurveyHistoryScreen(refreshToken: _surveyRefreshTick),
+        const PlaceholderFeaturePage(
+          title: 'Map',
+          subtitle: 'GPS capture and road segment context will be added here.',
+          icon: Icons.map_outlined,
+        ),
+        ExportScreen(),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -115,6 +113,9 @@ class _AppShellState extends State<AppShell> {
   void _onDestinationSelected(int index) {
     setState(() {
       _selectedIndex = index;
+      if (index == 1) {
+        _surveyRefreshTick++;
+      }
     });
   }
 }
