@@ -7,9 +7,7 @@ import '../../../core/media/domain/image_capture_service.dart';
 import '../../../core/media/infrastructure/image_picker_capture_service.dart';
 import '../application/gps_capture_controller.dart';
 import '../application/survey_image_controller.dart';
-import '../data/shared_preferences_survey_image_repository.dart';
 import '../domain/survey_form_options.dart';
-import '../domain/survey_image_repository.dart';
 import 'widgets/gps_capture_card.dart';
 import 'widgets/new_survey_action_bar.dart';
 import 'widgets/survey_choice_group.dart';
@@ -22,16 +20,12 @@ class NewSurveyScreen extends StatefulWidget {
   NewSurveyScreen({
     this.locationService = const GeolocatorLocationService(),
     ImageCaptureService? imageCaptureService,
-    SurveyImageRepository? imageRepository,
     super.key,
   })  : imageCaptureService =
-            imageCaptureService ?? ImagePickerCaptureService(),
-        imageRepository =
-            imageRepository ?? SharedPreferencesSurveyImageRepository();
+            imageCaptureService ?? ImagePickerCaptureService();
 
   final LocationService locationService;
   final ImageCaptureService imageCaptureService;
-  final SurveyImageRepository imageRepository;
 
   @override
   State<NewSurveyScreen> createState() => _NewSurveyScreenState();
@@ -58,7 +52,6 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
     );
     _surveyImageController = SurveyImageController(
       imageCaptureService: widget.imageCaptureService,
-      imageRepository: widget.imageRepository,
     )..load();
   }
 

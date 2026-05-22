@@ -4,7 +4,6 @@ import '../../../core/media/domain/image_capture_failure.dart';
 import '../../../core/media/domain/image_capture_service.dart';
 import '../domain/survey_draft.dart';
 import '../domain/survey_image.dart';
-import '../domain/survey_image_repository.dart';
 
 enum SurveyImageStatus {
   loading,
@@ -38,12 +37,9 @@ class SurveyImageState {
 class SurveyImageController extends ChangeNotifier {
   SurveyImageController({
     required ImageCaptureService imageCaptureService,
-    required SurveyImageRepository imageRepository,
-  })  : _imageCaptureService = imageCaptureService,
-        _imageRepository = imageRepository;
+  }) : _imageCaptureService = imageCaptureService;
 
   final ImageCaptureService _imageCaptureService;
-  final SurveyImageRepository _imageRepository;
 
   SurveyImageState _state = const SurveyImageState.loading();
   bool _isDisposed = false;
@@ -52,18 +48,12 @@ class SurveyImageController extends ChangeNotifier {
 
   Future<void> load() async {
     try {
-      final storedImages = await _imageRepository.loadImages();
       final recoveredImages = await _imageCaptureService.recoverLostImages();
-      final images = [...storedImages, ...recoveredImages];
-
-      if (recoveredImages.isNotEmpty) {
-        await _imageRepository.saveImages(images);
-      }
 
       _setState(
         SurveyImageState(
           status: SurveyImageStatus.ready,
-          draft: SurveyDraft(images: images),
+          draft: SurveyDraft(images: recoveredImages),
         ),
       );
     } on ImageCaptureException catch (error) {
@@ -109,7 +99,6 @@ class SurveyImageController extends ChangeNotifier {
       }
 
       final images = [..._state.draft.images, image];
-      await _imageRepository.saveImages(images);
       _ready(images);
     } on ImageCaptureException catch (error) {
       _failure(error.failure);
@@ -149,7 +138,6 @@ class SurveyImageController extends ChangeNotifier {
               : savedImage)
           .toList(growable: false);
 
-      await _imageRepository.saveImages(images);
       await _imageCaptureService.deleteImageFile(image);
       _ready(images);
     } on ImageCaptureException catch (error) {
@@ -175,7 +163,6 @@ class SurveyImageController extends ChangeNotifier {
         .toList(growable: false);
 
     try {
-      await _imageRepository.saveImages(images);
       await _imageCaptureService.deleteImageFile(image);
       _ready(images);
     } catch (_) {
@@ -193,7 +180,6 @@ class SurveyImageController extends ChangeNotifier {
     final images = List<SurveyImage>.from(_state.draft.images);
 
     try {
-      await _imageRepository.clearImages();
       for (final image in images) {
         await _imageCaptureService.deleteImageFile(image);
       }

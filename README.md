@@ -48,13 +48,10 @@ lib/
         application/
           gps_capture_controller.dart
           survey_image_controller.dart
-        data/
-          shared_preferences_survey_image_repository.dart
         domain/
           survey_draft.dart
           survey_form_options.dart
           survey_image.dart
-          survey_image_repository.dart
         presentation/
           new_survey_screen.dart
           widgets/
@@ -93,13 +90,11 @@ lib/
 - `lib/src/features/home/presentation/home_screen.dart` composes the Home Screen and responsive layout.
 - `lib/src/features/home/presentation/widgets/*` contains focused Home Screen widgets.
 - `lib/src/features/surveys/domain/survey_form_options.dart` defines form options for road side, severity, and distress types.
-- `lib/src/features/surveys/domain/survey_draft.dart` is the current local survey draft model and stores captured image paths.
-- `lib/src/features/surveys/domain/survey_image_repository.dart` defines draft image persistence.
-- `lib/src/features/surveys/data/shared_preferences_survey_image_repository.dart` persists draft image metadata across app restarts until SQLite is added.
+- `lib/src/features/surveys/domain/survey_draft.dart` is the current in-memory survey session model and stores captured image paths.
 - `lib/src/features/surveys/application/gps_capture_controller.dart` owns GPS capture state for the survey form.
-- `lib/src/features/surveys/application/survey_image_controller.dart` owns image capture, retake, delete, recovery, and draft image persistence state.
+- `lib/src/features/surveys/application/survey_image_controller.dart` owns image capture, retake, delete, recovery, and current-session image state.
 - `lib/src/features/surveys/presentation/new_survey_screen.dart` contains the validated, keyboard-safe New Survey form.
-- `lib/src/features/surveys/presentation/widgets/*` contains reusable form fields, choice controls, GPS capture UI, sections, and the sticky action bar.
+- `lib/src/features/surveys/presentation/widgets/*` contains reusable form fields, choice controls, GPS/image capture UI, sections, and the sticky action bar.
 
 ## Dependencies
 
@@ -109,7 +104,6 @@ Runtime dependency:
 geolocator: ^14.0.2
 image_picker: ^1.2.2
 path_provider: ^2.1.5
-shared_preferences: ^2.5.5
 ```
 
 Development dependency:
