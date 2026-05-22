@@ -176,8 +176,12 @@ class SurveyImageController extends ChangeNotifier {
     }
   }
 
-  Future<void> clear() async {
+  Future<void> clear({bool deleteFiles = true}) async {
     final images = List<SurveyImage>.from(_state.draft.images);
+    if (!deleteFiles) {
+      _ready(const []);
+      return;
+    }
 
     try {
       for (final image in images) {

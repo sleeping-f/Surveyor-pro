@@ -6,15 +6,28 @@ class NewSurveyActionBar extends StatelessWidget {
   const NewSurveyActionBar({
     required this.onReset,
     required this.onSubmit,
+    this.isSaving = false,
     super.key,
   });
 
   final VoidCallback onReset;
   final VoidCallback onSubmit;
+  final bool isSaving;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    final submitIcon = isSaving
+        ? SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: colorScheme.onPrimary,
+            ),
+          )
+        : const Icon(Icons.check);
 
     return Material(
       color: colorScheme.surface,
@@ -39,7 +52,7 @@ class NewSurveyActionBar extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: onReset,
+                  onPressed: isSaving ? null : onReset,
                   icon: const Icon(Icons.refresh),
                   label: const Text('Reset'),
                 ),
@@ -48,9 +61,9 @@ class NewSurveyActionBar extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: FilledButton.icon(
-                  onPressed: onSubmit,
-                  icon: const Icon(Icons.check),
-                  label: const Text('Validate'),
+                  onPressed: isSaving ? null : onSubmit,
+                  icon: submitIcon,
+                  label: Text(isSaving ? 'Saving...' : 'Save survey'),
                 ),
               ),
             ],

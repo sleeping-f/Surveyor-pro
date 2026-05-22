@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/surveys/presentation/survey_history_screen.dart';
 import '../../shared/widgets/placeholder_feature_page.dart';
 import 'app_destination.dart';
 
@@ -40,19 +41,15 @@ class _AppShellState extends State<AppShell> {
     ),
   ];
 
-  static const List<Widget> _pages = [
-    HomeScreen(),
-    PlaceholderFeaturePage(
-      title: 'Surveys',
-      subtitle: 'Survey forms and saved drafts will live here.',
-      icon: Icons.assignment_outlined,
-    ),
-    PlaceholderFeaturePage(
+  static final List<Widget> _pages = [
+    const HomeScreen(),
+    SurveyHistoryScreen(),
+    const PlaceholderFeaturePage(
       title: 'Map',
       subtitle: 'GPS capture and road segment context will be added here.',
       icon: Icons.map_outlined,
     ),
-    PlaceholderFeaturePage(
+    const PlaceholderFeaturePage(
       title: 'Exports',
       subtitle: 'CSV export history and transfer tools will be added here.',
       icon: Icons.download_outlined,

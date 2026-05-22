@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_spacing.dart';
@@ -5,9 +7,14 @@ import '../../../core/location/domain/location_service.dart';
 import '../../../core/location/infrastructure/geolocator_location_service.dart';
 import '../../../core/media/domain/image_capture_service.dart';
 import '../../../core/media/infrastructure/image_picker_capture_service.dart';
+import '../../../core/storage/app_database.dart';
 import '../application/gps_capture_controller.dart';
 import '../application/survey_image_controller.dart';
 import '../domain/survey_form_options.dart';
+import '../domain/survey_record.dart';
+import '../domain/survey_repository.dart';
+import '../domain/survey_storage_failure.dart';
+import '../data/sqflite_survey_repository.dart';
 import 'widgets/gps_capture_card.dart';
 import 'widgets/new_survey_action_bar.dart';
 import 'widgets/survey_choice_group.dart';
@@ -20,12 +27,16 @@ class NewSurveyScreen extends StatefulWidget {
   NewSurveyScreen({
     this.locationService = const GeolocatorLocationService(),
     ImageCaptureService? imageCaptureService,
+    SurveyRepository? surveyRepository,
     super.key,
   })  : imageCaptureService =
-            imageCaptureService ?? ImagePickerCaptureService();
+            imageCaptureService ?? ImagePickerCaptureService(),
+        surveyRepository = surveyRepository ??
+            SqfliteSurveyRepository(database: AppDatabase.instance);
 
   final LocationService locationService;
   final ImageCaptureService imageCaptureService;
+  final SurveyRepository surveyRepository;
 
   @override
   State<NewSurveyScreen> createState() => _NewSurveyScreenState();
@@ -43,6 +54,7 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
   RoadSide? _roadSide;
   String? _distressType;
   SurveySeverity? _severity;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -192,12 +204,13 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
         child: NewSurveyActionBar(
           onReset: _resetForm,
           onSubmit: _submitForm,
+          isSaving: _isSaving,
         ),
       ),
     );
   }
 
-  void _resetForm() {
+  void _resetForm({bool deleteImages = true}) {
     FocusScope.of(context).unfocus();
     _formKey.currentState?.reset();
     _projectNameController.clear();
@@ -205,7 +218,7 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
     _chainageController.clear();
     _notesController.clear();
     _gpsCaptureController.reset();
-    _surveyImageController.clear();
+    unawaited(_surveyImageController.clear(deleteFiles: deleteImages));
     setState(() {
       _roadSide = null;
       _distressType = null;
@@ -213,8 +226,12 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
     });
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     FocusScope.of(context).unfocus();
+    if (_isSaving) {
+      return;
+    }
+
     final isValid = _formKey.currentState?.validate() ?? false;
 
     if (!isValid) {
@@ -226,13 +243,50 @@ class _NewSurveyScreenState extends State<NewSurveyScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Survey is valid with ${_surveyImageController.state.draft.imagePaths.length} image path(s). Local saving will be connected later.',
-        ),
-      ),
+    setState(() => _isSaving = true);
+
+    final record = SurveyRecord(
+      projectName: _projectNameController.text.trim(),
+      roadName: _roadNameController.text.trim(),
+      chainage: _chainageController.text.trim(),
+      roadSide: _roadSide!,
+      distressType: _distressType!.trim(),
+      severity: _severity!,
+      notes: _notesController.text.trim(),
+      createdAt: DateTime.now(),
+      location: _gpsCaptureController.state.location,
+      images: _surveyImageController.state.draft.images,
     );
+
+    try {
+      await widget.surveyRepository.createSurvey(record);
+      if (!mounted) {
+        return;
+      }
+      _resetForm(deleteImages: false);
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Survey saved locally for offline access.'),
+        ),
+      );
+    } on SurveyStorageException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.failure.message),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 }
 
