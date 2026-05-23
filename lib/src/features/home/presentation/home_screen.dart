@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
 import '../../exports/presentation/export_screen.dart';
+import '../../../core/app_info/infrastructure/package_info_app_info_service.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../application/home_metrics_controller.dart';
+import 'widgets/app_info_sheet.dart';
 import 'widgets/field_status_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/quick_action_card.dart';
@@ -21,11 +23,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final HomeMetricsController _metricsController;
+  late final PackageInfoAppInfoService _appInfoService;
 
   @override
   void initState() {
     super.initState();
     _metricsController = HomeMetricsController()..load();
+    _appInfoService = PackageInfoAppInfoService();
   }
 
   @override
@@ -65,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         HomeHeader(
                           onNewSurveyPressed: () => _openNewSurvey(context),
+                          onAboutPressed: () => _showAppInfo(context),
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         const SectionHeader(
@@ -140,6 +145,22 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(
         builder: (_) => ExportScreen(),
       ),
+    );
+  }
+
+  Future<void> _showAppInfo(BuildContext context) async {
+    final appInfo = await _appInfoService.load();
+
+    if (!mounted) {
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => AppInfoSheet(appInfo: appInfo),
     );
   }
 }
