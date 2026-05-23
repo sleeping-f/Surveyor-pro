@@ -12,6 +12,7 @@ import '../../../core/media/infrastructure/image_picker_capture_service.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/surveyor_logo.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../application/quick_camera_controller.dart';
 import '../data/quick_camera_processing_service.dart';
@@ -62,7 +63,17 @@ class _QuickCameraScreenState extends State<QuickCameraScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quick camera'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            SurveyorLogo(
+              layout: SurveyorLogoLayout.icon,
+              height: 28,
+            ),
+            SizedBox(width: 8),
+            Text('Quick camera'),
+          ],
+        ),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {

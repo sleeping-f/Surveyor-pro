@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/surveyor_logo.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({
@@ -20,11 +21,13 @@ class HomeHeader extends StatelessWidget {
         final title = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Surveyor Pro',
-              style: Theme.of(context).textTheme.headlineMedium,
+            const SurveyorLogo(
+              layout: SurveyorLogoLayout.full,
+              height: 34,
+              iconHeight: 40,
+              gap: AppSpacing.sm,
             ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'Road survey workspace for field engineers',
               style: AppTextStyles.muted(context),

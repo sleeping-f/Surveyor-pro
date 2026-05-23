@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_spacing.dart';
+import '../../../shared/widgets/surveyor_logo.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_formatters.dart';
@@ -62,7 +63,17 @@ class _SurveyHistoryScreenState extends State<SurveyHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Survey history'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            SurveyorLogo(
+              layout: SurveyorLogoLayout.icon,
+              height: 28,
+            ),
+            SizedBox(width: 8),
+            Text('Survey history'),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Refresh',

@@ -25,3 +25,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/branding/surveyor_mark_light.png
+    - assets/branding/surveyor_mark_dark.png
+    - assets/branding/surveyor_wordmark_light.png
+    - assets/branding/surveyor_wordmark_dark.png

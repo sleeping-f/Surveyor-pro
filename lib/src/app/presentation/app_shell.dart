@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/home/presentation/home_screen.dart';
+import '../../shared/widgets/surveyor_logo.dart';
 import '../../features/exports/presentation/export_screen.dart';
 import '../../features/surveys/presentation/survey_history_screen.dart';
 import '../../shared/widgets/placeholder_feature_page.dart';
@@ -66,6 +67,15 @@ class _AppShellState extends State<AppShell> {
             children: [
               if (useRail)
                 NavigationRail(
+                  leading: Padding(
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                    child: SurveyorLogo(
+                      layout: useExtendedRail
+                          ? SurveyorLogoLayout.wordmark
+                          : SurveyorLogoLayout.icon,
+                      height: useExtendedRail ? 28 : 36,
+                    ),
+                  ),
                   selectedIndex: _selectedIndex,
                   extended: useExtendedRail,
                   labelType: useExtendedRail

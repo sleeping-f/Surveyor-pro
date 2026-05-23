@@ -8,6 +8,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/section_header.dart';
+import '../../../shared/widgets/surveyor_logo.dart';
 import '../../surveys/data/sqflite_survey_repository.dart';
 import '../../surveys/domain/survey_repository.dart';
 import '../application/survey_export_controller.dart';
@@ -52,7 +53,17 @@ class _ExportScreenState extends State<ExportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Exports'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            SurveyorLogo(
+              layout: SurveyorLogoLayout.icon,
+              height: 28,
+            ),
+            SizedBox(width: 8),
+            Text('Exports'),
+          ],
+        ),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
