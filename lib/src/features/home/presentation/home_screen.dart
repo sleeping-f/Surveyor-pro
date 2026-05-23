@@ -7,13 +7,32 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/section_header.dart';
+import '../application/home_metrics_controller.dart';
 import 'widgets/field_status_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/quick_action_card.dart';
-import 'widgets/survey_overview_card.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late final HomeMetricsController _metricsController;
+
+  @override
+  void initState() {
+    super.initState();
+    _metricsController = HomeMetricsController()..load();
+  }
+
+  @override
+  void dispose() {
+    _metricsController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,78 +55,61 @@ class HomeScreen extends StatelessWidget {
                 constraints: const BoxConstraints(
                   maxWidth: AppSpacing.maxContentWidth,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    HomeHeader(
-                      onNewSurveyPressed: () => _openNewSurvey(context),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    if (isWide)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: SurveyOverviewCard(
-                              onResumePressed: () => _showPendingFeature(
-                                context,
-                                'Survey drafts',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          const Expanded(
-                            flex: 2,
-                            child: FieldStatusCard(),
-                          ),
-                        ],
-                      )
-                    else ...[
-                      SurveyOverviewCard(
-                        onResumePressed: () => _showPendingFeature(
-                          context,
-                          'Survey drafts',
+                child: AnimatedBuilder(
+                  animation: _metricsController,
+                  builder: (context, _) {
+                    final state = _metricsController.state;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        HomeHeader(
+                          onNewSurveyPressed: () => _openNewSurvey(context),
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      const FieldStatusCard(),
-                    ],
-                    const SizedBox(height: AppSpacing.xl),
-                    const SectionHeader(
-                      title: 'Quick actions',
-                      subtitle: 'Prepared for offline field collection.',
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                      _QuickActionsGrid(
-                        isWide: isWide,
-                        onActionSelected: (feature) {
-                          if (feature == 'Start survey') {
-                            _openNewSurvey(context);
-                            return;
-                          }
+                        const SizedBox(height: AppSpacing.lg),
+                        const SectionHeader(
+                          title: 'Quick actions',
+                          subtitle: 'Prepared for offline field collection.',
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _QuickActionsGrid(
+                          isWide: isWide,
+                          onActionSelected: (feature) {
+                            if (feature == 'Start survey') {
+                              _openNewSurvey(context);
+                              return;
+                            }
 
-                          if (feature == 'Quick camera') {
-                            _openQuickCamera(context);
-                            return;
-                          }
+                            if (feature == 'Quick camera') {
+                              _openQuickCamera(context);
+                              return;
+                            }
 
-                          if (feature == 'Export CSV') {
-                            _openExports(context);
-                            return;
-                          }
+                            if (feature == 'Export CSV') {
+                              _openExports(context);
+                              return;
+                            }
 
-                          _showPendingFeature(context, feature);
-                        },
-                      ),
-                    const SizedBox(height: AppSpacing.xl),
-                    const SectionHeader(
-                      title: 'Recent surveys',
-                      subtitle: 'Saved local records will appear here.',
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    const _EmptyRecentSurveysCard(),
-                  ],
+                            _showPendingFeature(context, feature);
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                        const SectionHeader(
+                          title: 'Device data status',
+                          subtitle: 'Local counts update from storage.',
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        FieldStatusCard(state: state),
+                        const SizedBox(height: AppSpacing.xl),
+                        const SectionHeader(
+                          title: 'Recent surveys',
+                          subtitle: 'Saved local records will appear here.',
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        const _EmptyRecentSurveysCard(),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),

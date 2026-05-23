@@ -4,14 +4,21 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../application/home_metrics_controller.dart';
 
 class FieldStatusCard extends StatelessWidget {
-  const FieldStatusCard({super.key});
+  const FieldStatusCard({
+    required this.state,
+    super.key,
+  });
+
+  final HomeMetricsState state;
 
   @override
   Widget build(BuildContext context) {
     final statusColors =
         Theme.of(context).extension<AppStatusColors>() ?? AppStatusColors.light;
+    final metrics = state.metrics;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -24,35 +31,37 @@ class FieldStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Local counts will update as modules are connected.',
+            state.status == HomeMetricsStatus.failure
+                ? state.message ?? 'Local counts could not be loaded.'
+                : 'Local counts update from stored surveys, images, and exports.',
             style: AppTextStyles.muted(context),
           ),
           const SizedBox(height: AppSpacing.lg),
           _StatusMetric(
             icon: Icons.assignment_turned_in_outlined,
             label: 'Local records',
-            value: '0',
+            value: metrics.localRecords.toString(),
             color: statusColors.success,
           ),
           const SizedBox(height: AppSpacing.md),
           _StatusMetric(
             icon: Icons.edit_note_outlined,
             label: 'Draft surveys',
-            value: '0',
+            value: metrics.draftImages.toString(),
             color: statusColors.warning,
           ),
           const SizedBox(height: AppSpacing.md),
           _StatusMetric(
             icon: Icons.image_outlined,
             label: 'Stored images',
-            value: '0',
+            value: metrics.storedImages.toString(),
             color: statusColors.camera,
           ),
           const SizedBox(height: AppSpacing.md),
           _StatusMetric(
             icon: Icons.ios_share_outlined,
             label: 'Pending exports',
-            value: '0',
+            value: metrics.pendingExports.toString(),
             color: statusColors.info,
           ),
         ],
