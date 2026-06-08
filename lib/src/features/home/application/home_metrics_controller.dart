@@ -3,28 +3,15 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
-
-import '../../../core/storage/app_database.dart';
 
 class HomeMetrics {
   const HomeMetrics({
-    required this.localRecords,
-    required this.draftImages,
     required this.storedImages,
-    required this.pendingExports,
   });
 
-  const HomeMetrics.empty()
-      : localRecords = 0,
-        draftImages = 0,
-        storedImages = 0,
-        pendingExports = 0;
+  const HomeMetrics.empty() : storedImages = 0;
 
-  final int localRecords;
-  final int draftImages;
   final int storedImages;
-  final int pendingExports;
 }
 
 enum HomeMetricsStatus {
@@ -58,10 +45,7 @@ class HomeMetricsState {
 }
 
 class HomeMetricsController extends ChangeNotifier {
-  HomeMetricsController({AppDatabase? database})
-      : _database = database ?? AppDatabase.instance;
-
-  final AppDatabase _database;
+  HomeMetricsController();
 
   HomeMetricsState _state = const HomeMetricsState.loading();
   bool _isDisposed = false;
@@ -70,49 +54,29 @@ class HomeMetricsController extends ChangeNotifier {
 
   Future<void> load() async {
     try {
-      final db = await _database.database;
-      final localRecords = await _countRows(db, 'surveys');
-      final storedImages = await _countRows(db, 'survey_images');
-      final draftImages = await _countDraftImages(db);
-      final pendingExports = await _countPendingExports();
+      final storedImages = await _countStoredImages();
 
       _setState(
         HomeMetricsState(
           status: HomeMetricsStatus.ready,
           metrics: HomeMetrics(
-            localRecords: localRecords,
-            draftImages: draftImages,
             storedImages: storedImages,
-            pendingExports: pendingExports,
           ),
         ),
       );
     } catch (error) {
       _setState(
-        HomeMetricsState.failure(
-          'Storage counts could not be loaded.',
+        const HomeMetricsState.failure(
+          'Photo counts could not be loaded.',
         ),
       );
     }
   }
 
-  Future<int> _countRows(Database db, String table) async {
-    final rows = await db.rawQuery('SELECT COUNT(*) AS count FROM $table');
-    return Sqflite.firstIntValue(rows) ?? 0;
-  }
-
-  Future<int> _countDraftImages(Database db) async {
-    final rows = await db.rawQuery(
-      'SELECT path FROM survey_images',
-    );
-    final storedPaths = rows
-        .map((row) => row['path'] as String)
-        .where((value) => value.isNotEmpty)
-        .toSet();
-
+  Future<int> _countStoredImages() async {
     final directory = await getApplicationDocumentsDirectory();
     final imageDirectory = Directory(
-      p.join(directory.path, 'survey_images'),
+      p.join(directory.path, 'camera_captures'),
     );
 
     if (!await imageDirectory.exists()) {
@@ -124,26 +88,7 @@ class HomeMetricsController extends ChangeNotifier {
         .whereType<File>()
         .where((file) => p.extension(file.path).toLowerCase() == '.jpg');
 
-    return files.where((file) => !storedPaths.contains(file.path)).length;
-  }
-
-  Future<int> _countPendingExports() async {
-    Directory? directory;
-    if (Platform.isAndroid) {
-      directory = await getExternalStorageDirectory();
-    }
-    directory ??= await getApplicationDocumentsDirectory();
-
-    final exportDirectory = Directory(p.join(directory.path, 'exports'));
-    if (!await exportDirectory.exists()) {
-      return 0;
-    }
-
-    return exportDirectory
-        .listSync(followLinks: false)
-        .whereType<File>()
-        .where((file) => p.extension(file.path).toLowerCase() == '.csv')
-        .length;
+    return files.length;
   }
 
   void _setState(HomeMetricsState value) {
@@ -161,3 +106,4 @@ class HomeMetricsController extends ChangeNotifier {
     super.dispose();
   }
 }
+

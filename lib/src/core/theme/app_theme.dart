@@ -119,12 +119,31 @@ abstract final class AppTheme {
           borderRadius: AppSpacing.radius,
         ),
         backgroundColor: colorScheme.surface,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w600);
+          }
+          return textTheme.labelMedium;
+        }),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: colorScheme.surface,
         indicatorShape: RoundedRectangleBorder(
           borderRadius: AppSpacing.radius,
         ),
+        selectedLabelTextStyle: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w600),
+        unselectedLabelTextStyle: textTheme.labelMedium,
+      ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppSpacing.radius,
+          side: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.62),
+          ),
+        ),
+        color: colorScheme.surfaceContainerLow,
       ),
       dividerTheme: DividerThemeData(
         color: colorScheme.outlineVariant.withValues(alpha: 0.7),
@@ -139,3 +158,4 @@ abstract final class AppTheme {
     );
   }
 }
+

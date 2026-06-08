@@ -1,7 +1,7 @@
 name: surveyor_pro
 description: A professional offline-first road survey app for civil engineers.
 publish_to: "none"
-version: 0.1.0+1
+version: 1.0.1
 
 environment:
   sdk: ^3.5.0
@@ -18,6 +18,7 @@ dependencies:
   share_plus: ^10.0.2
   image: ^4.2.0
   permission_handler: ^11.3.1
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:surveyor_pro/src/core/app_info/domain/app_info.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -27,7 +28,7 @@ class AppInfoSheet extends StatelessWidget {
         children: [
           const SectionHeader(
             title: 'Version info',
-            subtitle: 'Current release metadata from the installed build.',
+            subtitle: '',
           ),
           const SizedBox(height: AppSpacing.md),
           AppCard(
@@ -69,26 +70,30 @@ class AppInfoSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _InfoRow(label: 'Version', value: appInfo.version),
-                const SizedBox(height: AppSpacing.sm),
-                _InfoRow(label: 'Build', value: appInfo.buildNumber),
-                const SizedBox(height: AppSpacing.sm),
-                _InfoRow(label: 'Package', value: appInfo.packageName),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'Release practice',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  'Created by ',
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                InkWell(
+                  onTap: () async {
+                    final uri = Uri.parse('https://www.linkedin.com/in/md-farhan-sadique-127b61316?utm_source=share_via&utm_content=profile&utm_medium=member_android');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri);
+                    }
+                  },
+                  child: Text(
+                    'Md. Farhan Sadique',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
                 Text(
-                  'Keep pubspec version, Git tag, and store release notes aligned. The next slice can add remote version checks and update prompts.',
-                  style: AppTextStyles.muted(context),
+                  'Special thanks to:\nMd. Rejaul Haque\n(Retired Sub Asst. Engineer, LGED)',
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),

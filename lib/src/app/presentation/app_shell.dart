@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/surveys/presentation/photo_gallery_screen.dart';
 import '../../shared/widgets/surveyor_logo.dart';
-import '../../features/exports/presentation/export_screen.dart';
-import '../../features/surveys/presentation/survey_history_screen.dart';
 import '../../shared/widgets/placeholder_feature_page.dart';
 import 'app_destination.dart';
 
@@ -19,7 +18,6 @@ class _AppShellState extends State<AppShell> {
   static const double _extendedRailBreakpoint = 1040;
 
   int _selectedIndex = 0;
-  int _surveyRefreshTick = 0;
 
   static const List<AppDestination> _destinations = [
     AppDestination(
@@ -45,14 +43,20 @@ class _AppShellState extends State<AppShell> {
   ];
 
   List<Widget> get _pages => [
-        const HomeScreen(),
-        SurveyHistoryScreen(refreshToken: _surveyRefreshTick),
+        HomeScreen(
+          onGalleryPressed: () => _onDestinationSelected(1),
+        ),
+        const PhotoGalleryScreen(),
         const PlaceholderFeaturePage(
           title: 'Map',
-          subtitle: 'GPS capture and road segment context will be added here.',
+          subtitle: 'Stay tuned for more functionality.',
           icon: Icons.map_outlined,
         ),
-        ExportScreen(),
+        const PlaceholderFeaturePage(
+          title: 'Exports',
+          subtitle: 'Stay tuned for more functionality.',
+          icon: Icons.download_outlined,
+        ),
       ];
 
   @override
@@ -123,9 +127,6 @@ class _AppShellState extends State<AppShell> {
   void _onDestinationSelected(int index) {
     setState(() {
       _selectedIndex = index;
-      if (index == 1) {
-        _surveyRefreshTick++;
-      }
     });
   }
 }

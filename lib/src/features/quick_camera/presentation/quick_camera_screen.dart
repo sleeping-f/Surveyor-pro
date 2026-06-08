@@ -116,6 +116,13 @@ class _QuickCameraScreenState extends State<QuickCameraScreen> {
                         _CaptureCard(
                           state: state,
                           onCapture: _capture,
+                          onOpenLocationSettings: () {
+                            if (state.failure?.title == 'Permission blocked') {
+                              widget.locationService.openAppSettings();
+                            } else {
+                              widget.locationService.openLocationSettings();
+                            }
+                          },
                         ),
                         if (state.lastResult != null) ...[
                           const SizedBox(height: AppSpacing.md),
@@ -270,10 +277,12 @@ class _CaptureCard extends StatelessWidget {
   const _CaptureCard({
     required this.state,
     required this.onCapture,
+    required this.onOpenLocationSettings,
   });
 
   final QuickCameraState state;
   final VoidCallback onCapture;
+  final VoidCallback onOpenLocationSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -310,6 +319,14 @@ class _CaptureCard extends StatelessWidget {
               state.failure!.message,
               style: AppTextStyles.muted(context),
             ),
+            if (state.failure!.title == 'Location is off' || state.failure!.title == 'Permission blocked') ...[
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton.icon(
+                onPressed: onOpenLocationSettings,
+                icon: const Icon(Icons.settings_outlined),
+                label: const Text('Open Settings'),
+              ),
+            ],
           ],
           const SizedBox(height: AppSpacing.md),
           SizedBox(

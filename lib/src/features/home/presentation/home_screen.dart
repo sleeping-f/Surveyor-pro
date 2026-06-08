@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
-import '../../exports/presentation/export_screen.dart';
 import '../../../core/app_info/infrastructure/package_info_app_info_service.dart';
 import '../../../core/constants/app_spacing.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/section_header.dart';
 import '../application/home_metrics_controller.dart';
 import 'widgets/app_info_sheet.dart';
-import 'widgets/field_status_card.dart';
 import 'widgets/home_header.dart';
-import 'widgets/quick_action_card.dart';
+import 'widgets/hero_camera_card.dart';
+import 'widgets/photo_stats_bar.dart';
+import 'widgets/secondary_action_card.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    required this.onGalleryPressed,
+    super.key,
+  });
+
+  final VoidCallback onGalleryPressed;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -45,7 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, constraints) {
           final horizontalPadding =
               AppSpacing.pagePaddingFor(constraints.maxWidth);
-          final isWide = constraints.maxWidth >= 820;
 
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
@@ -63,55 +63,63 @@ class _HomeScreenState extends State<HomeScreen> {
                   animation: _metricsController,
                   builder: (context, _) {
                     final state = _metricsController.state;
+                    // Note: Until HomeMetricsController is simplified, we use storedImages
+                    // as the proxy for total photos.
+                    final photoCount = state.metrics.storedImages;
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        HomeHeader(
-                          onNewSurveyPressed: () => _openNewSurvey(context),
-                          onAboutPressed: () => _showAppInfo(context),
+                        const HomeHeader(),
+                        const SizedBox(height: AppSpacing.xl),
+                        HeroCameraCard(
+                          onTap: () => _openQuickCamera(context),
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        const SectionHeader(
-                          title: 'Quick actions',
-                          subtitle: 'Prepared for offline field collection.',
+                        PhotoStatsBar(photoCount: photoCount),
+                        const SizedBox(height: AppSpacing.xl),
+                        Text(
+                          'More',
+                          style: Theme.of(context).textTheme.titleSmall,
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        _QuickActionsGrid(
-                          isWide: isWide,
-                          onActionSelected: (feature) {
-                            if (feature == 'Start survey') {
-                              _openNewSurvey(context);
-                              return;
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isWide = constraints.maxWidth >= 600;
+                            final children = [
+                              SecondaryActionCard(
+                                title: 'Photo Gallery',
+                                subtitle: 'View your captured photos',
+                                icon: Icons.photo_library_outlined,
+                                onTap: widget.onGalleryPressed,
+                              ),
+                              SecondaryActionCard(
+                                title: 'About Surveyor Pro',
+                                subtitle: 'Version info and details',
+                                icon: Icons.info_outline,
+                                onTap: () => _showAppInfo(context),
+                              ),
+                            ];
+
+                            if (isWide) {
+                              return Row(
+                                children: [
+                                  Expanded(child: children[0]),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(child: children[1]),
+                                ],
+                              );
                             }
 
-                            if (feature == 'Quick camera') {
-                              _openQuickCamera(context);
-                              return;
-                            }
-
-                            if (feature == 'Export CSV') {
-                              _openExports(context);
-                              return;
-                            }
-
-                            _showPendingFeature(context, feature);
+                            return Column(
+                              children: [
+                                children[0],
+                                const SizedBox(height: AppSpacing.sm),
+                                children[1],
+                              ],
+                            );
                           },
                         ),
-                        const SizedBox(height: AppSpacing.xl),
-                        const SectionHeader(
-                          title: 'Device data status',
-                          subtitle: 'Local counts update from storage.',
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        FieldStatusCard(state: state),
-                        const SizedBox(height: AppSpacing.xl),
-                        const SectionHeader(
-                          title: 'Recent surveys',
-                          subtitle: 'Saved local records will appear here.',
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        const _EmptyRecentSurveysCard(),
                       ],
                     );
                   },
@@ -124,28 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showPendingFeature(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature will be connected in a later feature slice.'),
-      ),
-    );
-  }
-
-  void _openNewSurvey(BuildContext context) {
-    Navigator.of(context).pushNamed(AppRoutes.newSurvey);
-  }
-
   void _openQuickCamera(BuildContext context) {
     Navigator.of(context).pushNamed(AppRoutes.quickCamera);
-  }
-
-  void _openExports(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ExportScreen(),
-      ),
-    );
   }
 
   Future<void> _showAppInfo(BuildContext context) async {
@@ -165,101 +153,3 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _QuickActionsGrid extends StatelessWidget {
-  const _QuickActionsGrid({
-    required this.isWide,
-    required this.onActionSelected,
-  });
-
-  final bool isWide;
-  final ValueChanged<String> onActionSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final statusColors =
-        Theme.of(context).extension<AppStatusColors>() ?? AppStatusColors.light;
-    final itemWidth = isWide ? 254.0 : double.infinity;
-
-    final actions = [
-      QuickActionCard(
-        title: 'Start survey',
-        subtitle: 'Create a road segment record',
-        icon: Icons.add_circle_outline,
-        color: Theme.of(context).colorScheme.primary,
-        onTap: () => onActionSelected('Start survey'),
-      ),
-      QuickActionCard(
-        title: 'Quick camera',
-        subtitle: 'Watermark GPS automatically',
-        icon: Icons.photo_camera_outlined,
-        color: statusColors.gps,
-        onTap: () => onActionSelected('Quick camera'),
-      ),
-      QuickActionCard(
-        title: 'Export CSV',
-        subtitle: 'Prepare field data transfer',
-        icon: Icons.file_download_outlined,
-        color: statusColors.info,
-        onTap: () => onActionSelected('Export CSV'),
-      ),
-    ];
-
-    return Wrap(
-      spacing: AppSpacing.md,
-      runSpacing: AppSpacing.md,
-      children: actions
-          .map(
-            (action) => SizedBox(
-              width: itemWidth,
-              child: action,
-            ),
-          )
-          .toList(),
-    );
-  }
-}
-
-class _EmptyRecentSurveysCard extends StatelessWidget {
-  const _EmptyRecentSurveysCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return AppCard(
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
-              borderRadius: AppSpacing.radius,
-            ),
-            child: Icon(
-              Icons.folder_open_outlined,
-              color: colorScheme.onPrimaryContainer,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'No local surveys yet',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'New records will stay available offline before export.',
-                  style: AppTextStyles.muted(context),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
